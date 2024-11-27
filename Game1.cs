@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using CheckersGame;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 
@@ -20,7 +21,12 @@ namespace checkers_2_official
         {
             // TODO: Add your initialization logic here
 
+
             base.Initialize();
+
+            // Установка иконки для окна
+            WindowIconHelper.SetWindowIcon(Window.Handle, "icon.ico");
+
         }
 
         protected override void LoadContent()

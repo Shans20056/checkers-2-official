@@ -1,3 +1,15 @@
-﻿
-using var game = new checkers_2_official.Game1();
-game.Run();
+﻿using checkers_2_official;
+using System;
+
+namespace CheckersGame
+{
+    public static class Program
+    {
+        [STAThread]
+        static void Main()
+        {
+            using (var game = new Game1())
+                game.Run();
+        }
+    }
+}
