@@ -1,6 +1,6 @@
-﻿namespace checkers-2-official.Pieces
+﻿namespace CheckersGame
 {
-        internal class Pieces
-{
-}
+    internal class Pieces
+    {
+    }
 }

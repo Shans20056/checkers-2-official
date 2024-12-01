@@ -1,6 +1,6 @@
-﻿namespace checkers-2-official.UI
+﻿namespace CheckersGame
 {
-        internal class UI
-{
-}
+    internal class UI
+    {
+    }
 }
