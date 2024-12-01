@@ -20,17 +20,28 @@ namespace checkers_2_official
 
         private RenderTarget2D _renderTarget;
 
+        // Счётчик ходов
+        private SpriteFont _font; // Для отображения текста
+        private int _moveCounter = 0;
+
+        // Текстуры
         private Texture2D _playButton;
         private Texture2D _settingButton;
         private Texture2D _quitButton;
         private Texture2D _backgroundTexture;
+        private Texture2D _checkerTexture;
+        private Texture2D _nextTurnButton;
 
+        private Rectangle _nextTurnRect;
         private Rectangle _trainingRect;
-        private Rectangle _multiplayerRect;
+        private Rectangle _settings;
         private Rectangle _exitRect;
 
-        private Texture2D _boardTexture;
         private GameState _currentGameState = GameState.Menu;
+
+        // Данные доски
+        private int[,] _board = new int[16, 16]; // 0 - пустая клетка, 1 - белая шашка, 2 - чёрная шашка, 3 - барьер
+        private const int CellSize = 32; // Размер клетки (16x16 пикселей)
 
         private MouseState _previousMouseState;
 
@@ -54,10 +65,18 @@ namespace checkers_2_official
             _spriteBatch = new SpriteBatch(GraphicsDevice);
 
             // Установим внутреннее разрешение (например, 1280x720)
-            _renderTarget = new RenderTarget2D(GraphicsDevice, 1280, 720);
+            _renderTarget = new RenderTarget2D(GraphicsDevice, 1920, 1080);
+
+            // Загрузка текстуры для ячейки 
+            _checkerTexture = Content.Load<Texture2D>("checker 1");
 
             // Загрузка текстуры для заднего фона
             _backgroundTexture = Content.Load<Texture2D>("background");
+
+            // Загрузка шрифта
+            _font = Content.Load<SpriteFont>("Font");
+
+            _nextTurnButton = Content.Load<Texture2D>("NextTurnButton");
 
             try
             {
@@ -76,8 +95,9 @@ namespace checkers_2_official
             int buttonHeight = 50;
 
             _trainingRect = new Rectangle(300, 50, buttonWidth, buttonHeight);
-            _multiplayerRect = new Rectangle(300, 200, buttonWidth, buttonHeight);
+            _settings = new Rectangle(300, 200, buttonWidth, buttonHeight);
             _exitRect = new Rectangle(300, 350, buttonWidth, buttonHeight);
+            _nextTurnRect = new Rectangle(625, 400, 50, 50);
         }
 
         protected override void Update(GameTime gameTime)
@@ -93,6 +113,19 @@ namespace checkers_2_official
                         Console.WriteLine("Переход в игру");
                         _currentGameState = GameState.CheckersGame;
                     }
+
+                    if (_settings.Contains(mouseState.Position))
+                    {
+                        Console.WriteLine("Переход в настройки");
+                        _currentGameState = GameState.Settings;
+                    }
+
+                    if (_exitRect.Contains(mouseState.Position))
+                    {
+                        Console.WriteLine("Выход");
+                        Exit();
+                    }
+
                 }
             }
             if (_currentGameState == GameState.Settings)
@@ -102,10 +135,12 @@ namespace checkers_2_official
 
             else if (_currentGameState == GameState.CheckersGame)
             {
-                // Логика обновления для игры "Шашки"
-                if (Keyboard.GetState().IsKeyDown(Keys.Escape))
+                if (mouseState.LeftButton == ButtonState.Pressed && _previousMouseState.LeftButton == ButtonState.Released)
                 {
-                    _currentGameState = GameState.Menu; // Возврат в меню
+                    if (_nextTurnRect.Contains(mouseState.Position))
+                    {
+                        EndTurn(); // Увеличиваем счётчик
+                    }
                 }
             }
 
@@ -113,25 +148,75 @@ namespace checkers_2_official
             base.Update(gameTime);
         }
 
+        private void EndTurn()
+        {
+            _moveCounter++; // Увеличиваем счётчик ходов
+            Console.WriteLine($"Ход номер: {_moveCounter}");
+        }
+
         protected override void Draw(GameTime gameTime)
         {
 
             GraphicsDevice.Clear(Color.CornflowerBlue);
 
+
+
             _spriteBatch.Begin();
-            // Рисуем фон на весь экран
-            _spriteBatch.Draw(_backgroundTexture, new Rectangle(0, 0, _graphics.PreferredBackBufferWidth, _graphics.PreferredBackBufferHeight), Color.White);
 
-            var mouseState = Mouse.GetState();
 
-            var trainingColor = _trainingRect.Contains(mouseState.Position) ? Color.Gray : Color.White;
-            _spriteBatch.Draw(_playButton, _trainingRect, trainingColor);
+            if (_currentGameState == GameState.Menu)
+            {
+                // Рисуем фон на весь экран
+                _spriteBatch.Draw(_backgroundTexture, new Rectangle(0, 0, _graphics.PreferredBackBufferWidth, _graphics.PreferredBackBufferHeight), Color.White);
 
-            var multiplayerColor = _multiplayerRect.Contains(mouseState.Position) ? Color.Gray : Color.White;
-            _spriteBatch.Draw(_settingButton, _multiplayerRect, multiplayerColor);
+                var mouseState = Mouse.GetState();
 
-            var exitColor = _exitRect.Contains(mouseState.Position) ? Color.Gray : Color.White;
-            _spriteBatch.Draw(_quitButton, _exitRect, exitColor);
+                var trainingColor = _trainingRect.Contains(mouseState.Position) ? Color.Gray : Color.White;
+                _spriteBatch.Draw(_playButton, _trainingRect, trainingColor);
+
+                var multiplayerColor = _settings.Contains(mouseState.Position) ? Color.Gray : Color.White;
+                _spriteBatch.Draw(_settingButton, _settings, multiplayerColor);
+
+                var exitColor = _exitRect.Contains(mouseState.Position) ? Color.Gray : Color.White;
+                _spriteBatch.Draw(_quitButton, _exitRect, exitColor);
+            }
+
+            if (_currentGameState == GameState.Settings)
+            {
+                _spriteBatch.Draw(_backgroundTexture, new Rectangle(0, 0, _graphics.PreferredBackBufferWidth, _graphics.PreferredBackBufferHeight), Color.White);
+
+                var mouseState = Mouse.GetState();
+            }
+
+
+            if (_currentGameState == GameState.CheckersGame)
+            {
+                // Рисуем фон на весь экран
+                _spriteBatch.Draw(_backgroundTexture, new Rectangle(0, 0, _graphics.PreferredBackBufferWidth, _graphics.PreferredBackBufferHeight), Color.White);
+
+                var mouseState = Mouse.GetState();
+
+                var TurnButtonColor = _nextTurnRect.Contains(mouseState.Position) ? Color.Gray : Color.White;
+                _spriteBatch.Draw(_nextTurnButton, _nextTurnRect, TurnButtonColor);
+
+                // Отрисовка клеток доски
+                for (int x = 0; x < 16; x++)
+                {
+                    for (int y = 0; y < 16; y++)
+                    {
+                        int posX = x * CellSize;
+                        int posY = y * CellSize;
+
+                        // Отрисовка клетки
+                        _spriteBatch.Draw(_checkerTexture, new Rectangle(posX, posY, CellSize, CellSize),
+                             ((x + y) % 2 == 0) ? Color.White : Color.Gray);
+                    }
+                }
+
+                // Отображение хода
+                _spriteBatch.DrawString(_font, $"Turn {_moveCounter}", new Vector2(625, 20), Color.BurlyWood);
+
+            }
 
             _spriteBatch.End();
 
