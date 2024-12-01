@@ -31,7 +31,19 @@ namespace checkers_2_official
         private Texture2D _backgroundTexture;
         private Texture2D _checkerTexture;
         private Texture2D _nextTurnButton;
+        private Texture2D _upgradeButton;
+        private Texture2D _buildButton;
+        private Texture2D _frog;
+        private Texture2D _frog1;
+        private Texture2D _chiken;
+        private Texture2D _chiken1;
 
+        private Rectangle _frogRect;
+        private Rectangle _frog1Rect;
+        private Rectangle _chikenRect;
+        private Rectangle _chiken1Rect;
+        private Rectangle _upgradeRect;
+        private Rectangle _buildButtonRect;
         private Rectangle _nextTurnRect;
         private Rectangle _trainingRect;
         private Rectangle _settings;
@@ -73,6 +85,12 @@ namespace checkers_2_official
             // Загрузка текстуры для заднего фона
             _backgroundTexture = Content.Load<Texture2D>("background");
 
+            // Загрузка кнопки улучшения
+            _upgradeButton = Content.Load<Texture2D>("upgrade");
+
+            // Загрузка кнопки постройки препятсвия
+            _buildButton = Content.Load<Texture2D>("build");
+
             // Загрузка шрифта
             _font = Content.Load<SpriteFont>("Font");
 
@@ -97,7 +115,9 @@ namespace checkers_2_official
             _trainingRect = new Rectangle(300, 50, buttonWidth, buttonHeight);
             _settings = new Rectangle(300, 200, buttonWidth, buttonHeight);
             _exitRect = new Rectangle(300, 350, buttonWidth, buttonHeight);
-            _nextTurnRect = new Rectangle(625, 400, 50, 50);
+            _nextTurnRect = new Rectangle(625, 400, 75, 75);
+            _upgradeRect = new Rectangle(565, 300, 70, 70);
+            _buildButtonRect = new Rectangle(685, 300, 65, 65);
         }
 
         protected override void Update(GameTime gameTime)
@@ -199,6 +219,12 @@ namespace checkers_2_official
                 var TurnButtonColor = _nextTurnRect.Contains(mouseState.Position) ? Color.Gray : Color.White;
                 _spriteBatch.Draw(_nextTurnButton, _nextTurnRect, TurnButtonColor);
 
+                var upgradeButtonColor = _upgradeRect.Contains(mouseState.Position) ? Color.Gray : Color.White;
+                _spriteBatch.Draw(_upgradeButton, _upgradeRect, upgradeButtonColor);
+
+                var buildButtonColor = _buildButtonRect.Contains(mouseState.Position) ? Color.Gray : Color.White;
+                _spriteBatch.Draw(_buildButton, _buildButtonRect, buildButtonColor);
+
                 // Отрисовка клеток доски
                 for (int x = 0; x < 16; x++)
                 {
@@ -213,8 +239,23 @@ namespace checkers_2_official
                     }
                 }
 
+                for (int x = 0; x < 16; x++)
+                {
+                    for (int y = 0; y < 16; y++)
+                    {
+                        if (_board[x, y] == 1) // Белая шашка
+                        {
+                            _spriteBatch.Draw(_frog, new Rectangle(x * CellSize, y * CellSize, CellSize, CellSize), Color.White);
+                        }
+                        else if (_board[x, y] == 2) // Чёрная шашка
+                        {
+                            _spriteBatch.Draw(_chiken, new Rectangle(x * CellSize, y * CellSize, CellSize, CellSize), Color.White);
+                        }
+                    }
+                }
+
                 // Отображение хода
-                _spriteBatch.DrawString(_font, $"Turn {_moveCounter}", new Vector2(625, 20), Color.BurlyWood);
+                _spriteBatch.DrawString(_font, $"Turn: {_moveCounter}", new Vector2(605, 20), Color.BurlyWood);
 
             }
 
