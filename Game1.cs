@@ -12,11 +12,13 @@ namespace checkers_2_official
         Menu,
         CheckersGame,
         Settings,
-        Statistic
+        Statistic,
+        Rule
     }
 
     public class Game1 : Game
     {
+        private Music _music = new Music();
         private GraphicsDeviceManager _graphics;
         private SpriteBatch _spriteBatch;
         private bool _hasFrogKing = true; // Наличие короля лягушек
@@ -26,6 +28,7 @@ namespace checkers_2_official
 
         // Счётчик ходов
         public SpriteFont _font; // Для отображения текста
+        public SpriteFont _font1;
         public int _moveCounter = 1;
         public int _IsActivity = 0;
         public string WINNER = "";
@@ -41,6 +44,7 @@ namespace checkers_2_official
         private Song _buttleMusic;
 
         private Texture2D _playButton;
+        private Texture2D _rule;
         private Texture2D _settingButton;
         private Texture2D _quitButton;
         private Texture2D _backgroundTexture;
@@ -58,10 +62,11 @@ namespace checkers_2_official
         private Texture2D _MainMenuButton;
         private Texture2D _musicButtonTexture;
 
-
+        private Rectangle _ruleRect;
         private Rectangle _musicButtonRect;
         private Rectangle _MainMenuRect;
         private Rectangle _MainMenuRect1;
+        private Rectangle _MainMenuRect2;
         private Rectangle _upgradeRect;
         private Rectangle _buildButtonRect;
         private Rectangle _nextTurnRect;
@@ -88,36 +93,19 @@ namespace checkers_2_official
         protected override void Initialize()
         {
             base.Initialize();
-
             Debagger.SetIcon(Window.Handle, "icon.ico");
-
-            // Инициализируем начальную расстановку шашек
             Logic.LogicBoard.InitializeBoard();
         }
 
         protected override void LoadContent()
         {
             _spriteBatch = new SpriteBatch(GraphicsDevice);
-
-            _buttleMusic = Content.Load<Song>("buttle");
-            MediaPlayer.IsRepeating = true; // Повтор музыки
-            MediaPlayer.Play(_buttleMusic); // Запуск музыки
-
-            // Установим внутреннее разрешение (например, 1280x720)
+            _music.LoadContent(Content);
             _renderTarget = new RenderTarget2D(GraphicsDevice, 1920, 1080);
-
-            // Загрузка текстуры для ячейки 
             _checkerTexture = Content.Load<Texture2D>("checker 1");
-
-            // Загрузка текстуры для заднего фона
             _backgroundTexture = Content.Load<Texture2D>("background");
-
-            // Загрузка кнопки улучшения
             _upgradeButton = Content.Load<Texture2D>("upgrade");
-
-            // Загрузка кнопки постройки препятсвия
             _buildButton = Content.Load<Texture2D>("build");
-            // Загрузка шашки 1 уровня курица
             _chiken = Content.Load<Texture2D>("chiken");
             _frog = Content.Load<Texture2D>("frog");
             _chiken1 = Content.Load<Texture2D>("chiken1");
@@ -125,34 +113,22 @@ namespace checkers_2_official
             _chikenking = Content.Load<Texture2D>("chikenking");
             _frogking = Content.Load<Texture2D>("frogking");
             _wall = Content.Load<Texture2D>("wall");
-            // Загрузка шрифта
             _font = Content.Load<SpriteFont>("Font");
+            _font1 = Content.Load<SpriteFont>("Font1");
             _MainMenuButton = Content.Load<Texture2D>("main menu");
-            _musicButtonTexture = Content.Load<Texture2D>("musicbutton");
             _nextTurnButton = Content.Load<Texture2D>("NextTurnButton");
+            _rule = Content.Load<Texture2D>("rule");
+            _playButton = Content.Load<Texture2D>("play");
+            _settingButton = Content.Load<Texture2D>("settings");
+            _quitButton = Content.Load<Texture2D>("quit");
 
-            try
-            {
-                // Загрузка текстур через IconHelper
-                _playButton = Debagger.LoadTexture(Content, "play");
-                _settingButton = Debagger.LoadTexture(Content, "settings");
-                _quitButton = Debagger.LoadTexture(Content, "quit");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Ошибка при загрузке текстур: {ex.Message}");
-                Exit(); // Закрываем приложение при ошибке
-            }
 
-            int buttonWidth = 200;
-            int buttonHeight = 50;
-
-            _musicButtonRect = new Rectangle(350, 100, 100, 100);
-            _MainMenuRect = new Rectangle(300, 350, buttonWidth, 100);
+            _ruleRect = new Rectangle(740, 430, 50, 50);
+            _MainMenuRect = new Rectangle(300, 350, 200, 100);
             _MainMenuRect1 = new Rectangle(695, 430, 100, 50);
-            _trainingRect = new Rectangle(300, 50, buttonWidth, buttonHeight);
-            _settings = new Rectangle(300, 200, buttonWidth, buttonHeight);
-            _exitRect = new Rectangle(300, 350, buttonWidth, buttonHeight);
+            _trainingRect = new Rectangle(300, 50, 200, 50);
+            _settings = new Rectangle(300, 200, 200, 50);
+            _exitRect = new Rectangle(300, 350, 200, 50);
             _nextTurnRect = new Rectangle(605, 340, 75, 75);
             _upgradeRect = new Rectangle(535, 240, 90, 85);
             _buildButtonRect = new Rectangle(660, 240, 75, 75);
@@ -168,20 +144,21 @@ namespace checkers_2_official
                 {
                     if (_trainingRect.Contains(mouseState.Position))
                     {
-                        Console.WriteLine("Переход в игру");
                         _currentGameState = GameState.CheckersGame;
                     }
 
                     if (_settings.Contains(mouseState.Position))
                     {
-                        Console.WriteLine("Переход в настройки");
                         _currentGameState = GameState.Settings;
                     }
 
                     if (_exitRect.Contains(mouseState.Position))
                     {
-                        Console.WriteLine("Выход");
                         Exit();
+                    }
+                    if (_ruleRect.Contains(mouseState.Position))
+                    {
+                        _currentGameState = GameState.Rule;
                     }
 
                 }
@@ -194,23 +171,10 @@ namespace checkers_2_official
                 {
                     if (_MainMenuRect.Contains(mouseState.Position))
                     {
-                        Console.WriteLine("Переход в игру");
                         _currentGameState = GameState.Menu;
                     }
 
-                    if (_musicButtonRect.Contains(mouseState.Position))
-                    {
-                        // Переключение состояния музыки
-                        _isMusicPlaying = !_isMusicPlaying;
-                        if (_isMusicPlaying)
-                        {
-                            MediaPlayer.Play(_buttleMusic);
-                        }
-                        else
-                        {
-                            MediaPlayer.Pause();
-                        }
-                    }
+                    _music.Update(mouseState, _currentGameState);
                 }
             }
 
@@ -226,7 +190,6 @@ namespace checkers_2_official
 
                     if (_MainMenuRect1.Contains(mouseState.Position))
                     {
-                        Console.WriteLine("Переход в игру");
                         _currentGameState = GameState.Menu;
                     }
 
@@ -465,7 +428,17 @@ namespace checkers_2_official
                 {
                     if (_MainMenuRect.Contains(mouseState.Position))
                     {
-                        Console.WriteLine("Переход в игру");
+                        _currentGameState = GameState.Menu;
+                    }
+                }
+            }
+
+            else if (_currentGameState == GameState.Rule)
+            {
+                if (mouseState.LeftButton == ButtonState.Pressed && _previousMouseState.LeftButton == ButtonState.Released)
+                {
+                    if (_MainMenuRect.Contains(mouseState.Position))
+                    {
                         _currentGameState = GameState.Menu;
                     }
                 }
@@ -507,6 +480,10 @@ namespace checkers_2_official
 
                 var exitColor = _exitRect.Contains(mouseState.Position) ? Color.Gray : Color.White;
                 _spriteBatch.Draw(_quitButton, _exitRect, exitColor);
+
+                var ruleColor = _ruleRect.Contains(mouseState.Position) ? Color.Gray : Color.White;
+                _spriteBatch.Draw(_rule, _ruleRect, ruleColor);
+
             }
 
             if (_currentGameState == GameState.Settings)
@@ -515,8 +492,7 @@ namespace checkers_2_official
 
                 var mouseState = Mouse.GetState();
 
-                var buttonColor = _isMusicPlaying ? Color.White : Color.Gray; // Цвет кнопки в зависимости от состояния
-                _spriteBatch.Draw(_musicButtonTexture, _musicButtonRect, buttonColor);
+                _music.Draw(_spriteBatch);
 
 
                 var mainMenu = _MainMenuRect.Contains(mouseState.Position) ? Color.Gray : Color.White;
@@ -653,6 +629,24 @@ namespace checkers_2_official
 
             }
 
+            if (_currentGameState == GameState.Rule)
+            {
+                _spriteBatch.Draw(_backgroundTexture, new Rectangle(0, 0, _graphics.PreferredBackBufferWidth, _graphics.PreferredBackBufferHeight), Color.White);
+
+                var mouseState = Mouse.GetState();
+
+                _spriteBatch.DrawString(_font1, " \n  The goal of the game is to eat the opponent's king, and the first one to do so wins." +
+                                                " \n  A move is ended by pressing the end move button, and in one move you can either" +
+                                                " \n  move one piece once, upgrade it several times, or put up any number of barriers." +
+                                                " \n  Basic pawns can move 1 square around themselves, but they can be upgraded to move" +
+                                                " \n  2 squares; kings move 2 squares at once and cannot be upgraded. Upgrading a piece" +
+                                                " \n  costs -$100, and installing a barrier that blocks a square until the end of the match costs -$200." +
+                                                " \n  The game's economy is designed so that each player gets +$10 for finishing a move, " +
+                                                " \n  another +$10 for cutting down a regular or upgraded piece, and a whole +$100 for cutting down a king.", new Vector2(25, 50), Color.BurlyWood);
+
+                var mainMenu = _MainMenuRect.Contains(mouseState.Position) ? Color.Gray : Color.White;
+                _spriteBatch.Draw(_MainMenuButton, _MainMenuRect, mainMenu);
+            }
 
 
 
